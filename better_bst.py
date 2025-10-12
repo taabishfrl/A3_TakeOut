@@ -13,7 +13,16 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             Return all items from the BST with keys,
             in the (inclusive) range of [low, high].
             Return the result in either an ArrayR or an ArrayList.
-            Complexity Analysis:
+
+            Complexity Analysis: Best case is O(log N + K), where N is the the number of nodes in the BST, and K
+            is the number of keys in the range low to high. The best case occurs when the BST is balanced, therefore
+            the complexity to traverse the height is O(log N), and the range from low to high contains only a few keys, therefore
+            the method only has to traverse to height O(log N) and check each node in the range of O(K).
+
+            Worst Case is O(N), where N is the number of nodes in the BST, This happens when the BST is not balanced and the range from low
+            to high contains almost every key in the BST, therefore the method has to traverse to height O(N) and check every node in the tree,
+            resulting in O(N) time complexity.
+
             ...
         """
         result = ArrayList() 
@@ -38,7 +47,7 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             Complexity Analysis:
             ...
         """
-        pass
+
         
     
     def rebalance(self):
