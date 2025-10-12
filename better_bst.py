@@ -3,8 +3,10 @@
 from functools import total_ordering
 import math
 
+
 from typing import Union
 from data_structures import ArrayList, ArrayR
+from data_structures.node import BinaryNode
 from data_structures.binary_search_tree import BinarySearchTree, K, V
 
 class BetterBinarySearchTree(BinarySearchTree[K, V]):
@@ -29,7 +31,7 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
         self.range_query_recursive(self.__root, low, high, result)
         return result
     
-    def range_query_recursive(self, node, low: K, high: K, result):
+    def range_query_recursive(self, node: BinaryNode[K,V] | None, low: K, high: K, result: ArrayList[V]) -> None:
         if node is None:
             return
         if node.key > low:
@@ -44,11 +46,24 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             Returns the balance score of the BST, which we define as the
             difference between the ideal (balanced) height of the tree (achievable with a complete tree),
             and the actual height of the tree.
+
             Complexity Analysis:
             ...
         """
-
+        def subtree_height(node: BinaryNode[K,V] | None):
+            if node is None:
+                return 0
+            left_height = subtree_height(node.left)
+            right_height = subtree_height(node.right)
+            return 1 + max(left_height, right_height)
         
+        tree_height = subtree_height(self.__root)
+        count_nodes = len(self)
+
+        ideal_height = math.floor(math.log2(count_nodes)) if count_nodes > 0 else 0
+        return tree_height - ideal_height
+    
+    
     
     def rebalance(self):
         """
@@ -75,3 +90,19 @@ if __name__ == "__main__":
     print("range_query(2,4):", [v for v in bbst.range_query(2, 4)])
     print("range_query(3,4):", [v for v in bbst.range_query(3, 4)])
     print("range_query(0,1):", [v for v in bbst.range_query(0, 1)])
+
+    bbst1 = BetterBinarySearchTree()
+
+    for k, v in [(4, 'A'), (2, 'B'), (5, 'C'), (1, 'D'), (3, 'E')]:
+        bbst1[k] = v
+    print("Perfectly balanced, score:", bbst1.balance_score())  # Expect 0
+
+    bbst2 = BetterBinarySearchTree()
+    for k, v in [(4, 'A'), (3, 'B'), (5, 'C'), (2, 'D'), (1, 'E')]:
+        bbst2[k] = v
+    print("Slightly unbalanced, score:", bbst2.balance_score())  # Expect 1
+
+    bbst3 = BetterBinarySearchTree()
+    for k in [5, 4, 3, 2, 1]:
+        bbst3[k] = str(k)
+    print("Stick tree, score:", bbst3.balance_score())  # Expect n - ideal_height
