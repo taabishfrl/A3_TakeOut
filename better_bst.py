@@ -25,7 +25,7 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             to high contains almost every key in the BST, therefore the method has to traverse to height O(N) and check every node in the tree,
             resulting in O(N) time complexity.
 
-            ...
+            
         """
         result = ArrayList() 
         self.range_query_recursive(self.__root, low, high, result)
@@ -54,7 +54,7 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             Worst case is O(N), where N is the number of nodes, The worst case happens when the BST is completely unbalanced like
             a stick. Regardless, the method still calls the recursive height function to check every node atleast once to calculate 
             the height. 
-            ...
+            
         """
         def subtree_height(node: BinaryNode[K,V] | None):
             if node is None:
@@ -77,30 +77,27 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             
             Do *not* return a new instance; rather, this method
             should modify the tree it is called on.
-            Complexity Analysis:
-            ...
+
+            Complexity Analysis: Best case is O(N), where N is the number of nodes in the BST.In this case,
+            the method has to iterate through every node in the BST once by the in-order iterator to collect 
+            the (key,item) pairs which takes O(N) time. When reconstructing the BST,it takes O(N) time,
+            using the helper method build_balanced(). This happens regardless of how balanced the tree is.
+
+            Worst case is also O(N), where N is the numnber of nodes in the BST, the worst and best case is the same,
+            as regardless of how balanced or unbalanced the tree is, it still has to iterate and check every node, so that
+            it can reconstruct the BST which takes O(N) time.
+            
         """
         bst_size = len(self)
         if bst_size == 0:
             return
-        
+
         inorder_items = ArrayR(bst_size)
-        self.collect_inorder(self._BetterBinarySearchTree__root, inorder_items, 0)
-    
+        for i, (key, item) in enumerate(self):  
+            inorder_items[i] = (key, item)
+
         self._BetterBinarySearchTree__root = self.build_balanced(inorder_items, 0, bst_size - 1)
 
-    def collect_inorder(self, node: BinaryNode[K, V] | None, nodes: ArrayR, index: int) -> int:
-        if node is None:
-            return index
-        
-        index = self.collect_inorder(node.left, nodes, index)
-        
-        nodes[index] = (node.key, node.item)
-        index += 1
-        
-        index = self.collect_inorder(node.right, nodes, index)
-        
-        return index
 
     def build_balanced(self, nodes: ArrayR, start: int, end: int) -> BinaryNode[K, V] | None:
         if start > end:
