@@ -47,12 +47,18 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             difference between the ideal (balanced) height of the tree (achievable with a complete tree),
             and the actual height of the tree.
 
-            Complexity Analysis:
+            Complexity Analysis: Best case is O(N), where N is the number of nodes in the BST. The best case happens when
+            the BST is perfectly balanced. In this case, the method still has to call the recursive height function and check
+            every node atleast once to calculate the height, resulting in O(N) time.
+
+            Worst case is O(N), where N is the number of nodes, The worst case happens when the BST is completely unbalanced like
+            a stick. Regardless, the method still calls the recursive height function to check every node atleast once to calculate 
+            the height. 
             ...
         """
         def subtree_height(node: BinaryNode[K,V] | None):
             if node is None:
-                return 0
+                return -1
             left_height = subtree_height(node.left)
             right_height = subtree_height(node.right)
             return 1 + max(left_height, right_height)
