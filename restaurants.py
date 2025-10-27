@@ -5,9 +5,10 @@ import math
 
 from typing import Iterator
 from data_structures import ArrayR
-from data_structures import BinarySearchTree
 from better_bst import BetterBinarySearchTree
+from algorithms import mergesort
 
+@total_ordering
 class MenuItem:
     def __init__(self, name: str, rating: float):
         """
@@ -17,14 +18,21 @@ class MenuItem:
         self.name = name
         self.rating = rating
         
-        
+    def __eq__(self, other):
+        return self.rating == other.rating and self.name == other.name
+    
+    def __lt__(self, other):
+        if self.rating != other.rating:
+            return self.rating > other.rating
+        return self.name < other.name
+    
     def __str__(self):
         """
             String representation method for MenuItem class.
             Implementation optional - perhaps useful for debugging.
             No analysis required.
         """
-        return f"MenuItem <???>"
+        return f"MenuItem <{self.name}, {self.rating}>"
         
 
 
@@ -32,15 +40,17 @@ class Restaurant:
     def __init__(self, name: str, block_number: int, initial_menu: ArrayR[MenuItem]):
         """
             Constructor for Restaurant.
-            Complexity Analysis: Best case and Worst case is O(N), where N is the len(initial_menu), this is the case
-            as regardless of the input size, the time complexity is linear with respect to the menu size, as each element
-            in initial_menu needs to be processed regardless of the Menuitem contents. 
+            Complexity Analysis: 
             ...
         """
         self.name = name
         self.block_number = block_number
-        self.menu = initial_menu
-    
+        self.menu = ArrayR(len(initial_menu))
+
+        for i in range(len(initial_menu)):
+            self.menu[i] = initial_menu[i]
+        self.menu = mergesort(self.menu)
+
     
     def __str__(self):
         """
@@ -48,7 +58,7 @@ class Restaurant:
             Implementation optional - perhaps useful for debugging.
             No analysis required.
         """
-        return f"Restaurant <???>"
+        return f"Restaurant <{self.name},{self.block_number},{self.menu}>"
         
 
 class FoodFlight:
@@ -83,7 +93,10 @@ class FoodFlight:
             Complexity Analysis:
             ...
         """
-        pass
+        restaurant = self.restaurants[restaurant_name]
+        if restaurant is None:
+            raise KeyError(f'Restaurant {restaurant_name} not found')
+        return restaurant.menu
         
 
     def add_to_menu(self, restaurant_name: str, new_items: ArrayR[MenuItem]):
@@ -92,7 +105,20 @@ class FoodFlight:
             Complexity Analysis:
             ...
         """
-        pass
+        restaurant = self.restaurants[restaurant_name]
+        if restaurant is None:
+            raise KeyError(f'Restaurant {restaurant_name} not found')
+        
+        current_count = len(restaurant.menu)
+        new_count = len(new_items)
+        combined = ArrayR(current_count + new_count)
+        
+        for i in range(current_count):
+            combined[i] = restaurant.menu[i]
+        for i in range(new_count):
+            combined[current_count + i] = new_items[i]
+        
+        restaurant.menu = mergesort(combined)
     
     
     def meal_suggestions(self, user_block_number: int, max_walk: int) -> Iterator[MenuItem]:
