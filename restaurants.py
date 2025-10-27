@@ -55,7 +55,8 @@ class FoodFlight:
     def __init__(self):
         """
             Constructor for FoodFlight.
-            Complexity Analysis:
+            Complexity Analysis: Best and Worst case is O(1), this is the case as we are simply performing
+            the same constant-time initializing of the BetterBinarySearchTree and does not depend on any input size.
             ...
         """
         self.restaurants = BetterBinarySearchTree()
@@ -64,7 +65,13 @@ class FoodFlight:
     def add_restaurant(self, restaurant: Restaurant):
         """
             Register a `restaurant` in the FoodFlight app.
-            Complexity Analysis:
+            Complexity Analysis: Best case is O(log R + M), where R is the number of restaurants registered, and
+            M is len(restaurant.name), this is the case when the tree is balanced, requiring O(log R) time for insertion
+            and O(M) time to process the restaurant name.
+
+            Worst case is also O(log R + M),where R is the number of restaurants registered, and M is len(restaurant.name),
+            this is the case as we can assume the BST is always magically balanced, thus maintaining the logarithmic insertion time
+            regardless of the order.
             ...
         """
         self.restaurants[restaurant.name] = restaurant
