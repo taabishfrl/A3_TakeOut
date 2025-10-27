@@ -5,6 +5,8 @@ import math
 
 from typing import Iterator
 from data_structures import ArrayR
+from data_structures import BinarySearchTree
+from better_bst import BetterBinarySearchTree
 
 class MenuItem:
     def __init__(self, name: str, rating: float):
@@ -30,11 +32,14 @@ class Restaurant:
     def __init__(self, name: str, block_number: int, initial_menu: ArrayR[MenuItem]):
         """
             Constructor for Restaurant.
-            Complexity Analysis:
+            Complexity Analysis: Best case and Worst case is O(N), where N is the len(initial_menu), this is the case
+            as regardless of the input size, the time complexity is linear with respect to the menu size, as each element
+            in initial_menu needs to be processed regardless of the Menuitem contents. 
             ...
         """
         self.name = name
         self.block_number = block_number
+        self.menu = initial_menu
     
     
     def __str__(self):
@@ -53,7 +58,7 @@ class FoodFlight:
             Complexity Analysis:
             ...
         """
-        pass
+        self.restaurants = BetterBinarySearchTree()
         
     
     def add_restaurant(self, restaurant: Restaurant):
@@ -62,7 +67,7 @@ class FoodFlight:
             Complexity Analysis:
             ...
         """
-        pass
+        self.restaurants[restaurant.name] = restaurant
         
     
     def get_menu(self, restaurant_name: str):
