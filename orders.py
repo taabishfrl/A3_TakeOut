@@ -3,7 +3,7 @@
 from functools import total_ordering
 import math
 
-from data_structures import List, ArrayR
+from data_structures import List, ArrayR, ArrayMaxHeap,ArrayList
 
 class Order:
     def __init__(self, hunger: int, location: tuple[float, float]):
@@ -17,17 +17,20 @@ class Order:
         
         
     def __str__(self):
-        return "Order <???>"
+        return f"Order <Hunger: {self.hunger} ,Location: {self.location} , Distance: {self.distance:.2f}>"
     
     
 class OrderDispatch:
     def __init__(self, dispatch_location: tuple[float, float], max_orders: int):
         """
             Constructor for OrderDispatch.
+
             Complexity Analysis:
             ...
         """
-        pass
+        self.dispatch_location = dispatch_location
+        self.max_orders = max_orders
+        self.orders = ArrayMaxHeap(max_orders)
     
     
     def __len__(self):
@@ -35,16 +38,29 @@ class OrderDispatch:
             Return the number of pending orders in the dispatch system.
             No analysis required.
         """
-        pass
+        return len(self._orders)
         
     
     def receive_order(self, order: Order):
         """
             Receive a new Food Flight order into the dispatch system.
-            Complexity Analysis:
+
+            Complexity Analysis: Best and Worst case is O(log N), where N is the number of orders
+            that are currently in the system. This is the case as inseertion into a heap will always
+            take O(log N) time to maintain the heap property, regardless of the state of the heap. 
+            Calculating the distance and checking the max order limit of the heap are constant time
+            operations, thereby the O(log N) dominates the complexity.
             ...
         """
-        pass
+        if len(self.orders) >= self.max_orders:
+            raise Exception("Maximum Limit Of Orders Reached!")
+            
+        x_diff = order.location[0] - self.dispatch_location[0]
+        y_diff = order.location[1] - self.dispatch_location[1]
+        order.distance = math.sqrt(x_diff * x_diff + y_diff * y_diff)
+
+        score = 4 * order.distance - 5 * order.hunger
+        self.orders.add((-score, order))
         
     
     def deliver_single(self) -> Order:
@@ -52,10 +68,15 @@ class OrderDispatch:
             Deliver a single pending order with the lowest
             FoodFast (TM) score.
             See specifications for details.
+
             Complexity Analysis:
             ...
         """
-        pass
+        if len(self.orders) == 0:
+            raise Exception("No pending orders")
+
+        _, order = self.orders.extract_max()
+        return order
         
     
     def deliver_multiple(self, max_travel: float) -> List[Order]:
@@ -63,16 +84,39 @@ class OrderDispatch:
             Deliver as many orders, prioritising orders such that
             lower FoodFast (TM) scores are delivered first.
             See specifications for details.
+
             Complexity Analysis:
             ...
         """
-        pass
+        delivered_orders = ArrayList()
+        current_location = self.dispatch_location
+        remaining_travel = max_travel
+        total_travel = 0.0
+
+        while len(self.orders) > 0:
+            
+            _, next_order = self.orders.extract_max()
+            to_order = math.sqrt((next_order.location[0] - current_location[0]) ** 2 +(next_order.location[1] - current_location[1]) ** 2)
+
+            to_home = math.sqrt((next_order.location[0] - self.dispatch_location[0]) ** 2 +(next_order.location[1] - self.dispatch_location[1]) ** 2)
+
+            if total_travel + to_order + to_home > max_travel:
+                score = 4 * next_order.distance - 5 * next_order.hunger
+                self.orders.add((-score, next_order))
+                break
+
+            delivered_orders.insert(len(delivered_orders), next_order)
+            remaining_travel -= to_order
+            current_location = next_order.location
+
+        return delivered_orders
         
 
     def order_surge_1054(self, surge_batch: ArrayR[Order]):
         """
             Add all orders from surge batch, ensuring this is done as
             efficiently as possible to minimise downtime.
+
             Complexity Analysis:
             ...
         """
@@ -83,34 +127,17 @@ if __name__ == "__main__":
     # Test your code here
 
     # Let's create a dispatch and a few orders
-    dispatch_location = (2, 3)
-    dispatch = OrderDispatch(dispatch_location, max_orders=10)
-    
-    first_orders = [
-        Order(3, (5, 6)),
-        Order(4, (6, 4)),
-        Order(1, (4, 4))
-    ]
-    
-    second_orders = [
-        Order(7, (-4, 3)),
-        Order(10, dispatch_location), # Someone ordered FROM the dispatch!
-        Order(5, (0, 5))
-    ]
-    
-    for order in first_orders:
-        dispatch.receive_order(order)
-        
-    # Dispatch an order
-    first_dispatched = dispatch.deliver_single()
-    
-    print("1st dispatch:", first_dispatched)
-    
-    # Now we add the second collection
-    for order in second_orders:
-        dispatch.receive_order(order)
-        
-    # Let's see what gets delivered now
-    second_dispatched = dispatch.deliver_single()
-    
-    print("2nd dispatch:", second_dispatched)
+    # Create the dispatch location and system
+    dispatch_location = (0, 0)
+    dispatch = OrderDispatch(dispatch_location, max_orders=5)
+    dispatch.receive_order(Order(4, (10, 10)))  # Far from dispatch
+    dispatch.receive_order(Order(3, (15, 16)))  # Even farther
+
+    # Set a very small max_travel (cannot even reach the first and return)
+    max_travel = 5
+
+    delivered = dispatch.deliver_multiple(max_travel)
+
+    print(f"Delivered {len(delivered)} order(s) (should be 0):")
+    for order in delivered:
+        print(order)
