@@ -25,7 +25,9 @@ class OrderDispatch:
         """
             Constructor for OrderDispatch.
 
-            Complexity Analysis:
+            Complexity Analysis: Best and Worst case is O(1), as the function is simply performing
+            constant-time operations such as assigning variables and initializing an ArrayMaxHeao with
+            max_orders constant value.
             ...
         """
         self.dispatch_location = dispatch_location
@@ -69,7 +71,9 @@ class OrderDispatch:
             FoodFast (TM) score.
             See specifications for details.
 
-            Complexity Analysis:
+            Complexity Analysis: Best and Worst case is O(log N), where N is the number of orders in the
+            heap, this is the case when all elements are distinct, and extract_max always takes O(log N) time to get
+            the max element, regardless of the contents of the heap.
             ...
         """
         if len(self.orders) == 0:
@@ -85,7 +89,13 @@ class OrderDispatch:
             lower FoodFast (TM) scores are delivered first.
             See specifications for details.
 
-            Complexity Analysis:
+            Complexity Analysis: Best case is O(log N), where N is the number of orders in the heap. This is the case
+            when after the first order is extracted and delivered, the max_travel limit is exceeded so the function is terminated.
+            extract_max always takes O(log N) time to get the element with the highest priority, therefore the complexity is O(log N).
+
+            Worst case is O(M log N), where N is the number of orders in the heap, and M is the number of orders actually delivered.
+            This is the case when all the orders are extracted and delivered, therefore, the extract_max runs for O(log N) per call.
+            Therefore, the time complexity if O(M log N).
             ...
         """
         delivered_orders = ArrayList()
