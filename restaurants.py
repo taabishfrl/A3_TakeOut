@@ -37,8 +37,8 @@ class MenuItem:
 @total_ordering
 class ComparableMenuItem:
     """
-    Wrapper for MenuItem that reverses the comparison logic
-    so it works correctly with a max-heap which expects natural ascending order.
+    This is a wrapper that reverses the comparison logic so that we can use it correctly with max-heap
+    which typically expects a natural ascending order.
     """
     def __init__(self, menu_item):
         self.menu_item = menu_item
@@ -171,7 +171,9 @@ class FoodFlight:
 
         for _, restaurant in self.restaurants:
             if abs(restaurant.block_number - user_block_number) <= max_walk:
+
                 if len(restaurant.menu) > 0:
+
                     if count == len(candidates):
                         new_size = max(2 * count, 1)
                         new_candidates = ArrayR(new_size)
@@ -193,44 +195,72 @@ class FoodFlight:
         heap = ArrayMaxHeap(count)
 
         for i in range(count):
-            menu, idx = candidates[i]
-            heap.add((ComparableMenuItem(menu[idx]), i, idx))
+            menu, index = candidates[i]
+            heap.add((ComparableMenuItem(menu[index]), i, index))
 
         while len(heap) > 0:
-            wrapped_item, rest_i, idx_in_menu = heap.extract_max()
+            wrapped_item, rest_i, index_in_menu = heap.extract_max()
             yield wrapped_item.menu_item
 
             menu, _ = candidates[rest_i]
-            next_idx = idx_in_menu + 1
-            if next_idx < len(menu):
-                heap.add((ComparableMenuItem(menu[next_idx]), rest_i, next_idx))
+            next_index = index_in_menu + 1
+            if next_index < len(menu):
+                heap.add((ComparableMenuItem(menu[next_index]), rest_i, next_index))
 
 
 if __name__ == "__main__":
     # Test your code here
     
     # First restaurant with no initial menu items
-        giraffis_menu = ArrayR(3)
-        giraffis_menu[0] = MenuItem("Chicken Avo Panini", 5)
-        giraffis_menu[1] = MenuItem("Vegetarian Focaccia", 2)
-        giraffis_menu[2] = MenuItem("Breakfast Muffin", 1)
+    menu1 = ArrayR(3)
+    menu1[0] = MenuItem("A", 7)
+    menu1[1] = MenuItem("B", 8)
+    menu1[2] = MenuItem("Z", 8)
 
-        jos_pizza_menu = ArrayR(3)
-        jos_pizza_menu[0] = MenuItem("Margarita Pizza", 5)
-        jos_pizza_menu[1] = MenuItem("Pepperoni Pizza", 3)
-        jos_pizza_menu[2] = MenuItem("Vegetarian Pizza", 2)
+    menu2 = ArrayR(2)
+    menu2[0] = MenuItem("Noodles", 6)
+    menu2[1] = MenuItem("Soup", 8)
 
-        # Create restaurant instances at different blocks
-        r1 = Restaurant("Giraffis", 4, giraffis_menu)
-        r2 = Restaurant("Jo's Pizza", 7, jos_pizza_menu)
+    r1 = Restaurant("EatPlace", 1, menu1)
+    r2 = Restaurant("SuperSoup", 10, menu2)
 
-        # Create a FoodFlight object and register the restaurants
-        ff = FoodFlight()
-        ff.add_restaurant(r1)
-        ff.add_restaurant(r2)
+    ff = FoodFlight()
+    ff.add_restaurant(r1)
+    ff.add_restaurant(r2)
 
-        # Place the user at block 6, with a max_walk of 2 (so blocks 4 to 8 are reachable)
-        iterator = ff.meal_suggestions(6, 2)
-        print("Meal Suggestions within 2 blocks of 6:")
-        for item in iterator:
-            print(item)
+    print("EatPlace menu (should be: [B, Z, A]):")
+    print([m.name for m in ff.get_menu("EatPlace")])
+
+    print("SuperSoup menu (should be: [Soup, Noodles]):")
+    print([m.name for m in ff.get_menu("SuperSoup")])
+
+    # Add more items and test sorting & tie-breaker
+    add_items = ArrayR(2)
+    add_items[0] = MenuItem("Apple", 8)
+    add_items[1] = MenuItem("Banana", 8)
+    ff.add_to_menu("EatPlace", add_items)
+
+    print("EatPlace updated menu (should be: [Apple, B, Banana, Z, A]):")
+    print([m.name for m in ff.get_menu("EatPlace")])
+
+    try:
+        ff.get_menu("Nope")
+    except KeyError as e:
+        print("Caught missing restaurant:", e)
+
+    print("Meal Suggestions for block 99, max_walk=1 (empty):")
+    for item in ff.meal_suggestions(99, 1):
+        print(item)  # Should print nothing
+
+    add_new = ArrayR(2)
+    add_new[0] = MenuItem("Avocado", 10)
+    add_new[1] = MenuItem("Zucchini", 10)
+    ff.add_to_menu("EatPlace", add_new)
+    print("EatPlace final menu:",[m.name for m in ff.get_menu("EatPlace")])  # Should be ['Avocado', 'Zucchini', ... rest]
+
+    print("Meal Suggestions for block 1, max_walk=0:")
+    for item in ff.meal_suggestions(1, 0):
+        print(item)  # Should print Avocado (10), Zucchini (10), Apple (8), ... etc
+
+
+    

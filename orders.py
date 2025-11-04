@@ -33,6 +33,7 @@ class OrderDispatch:
         self.dispatch_location = dispatch_location
         self.max_orders = max_orders
         self.orders = ArrayMaxHeap(max_orders)
+        self.arrival_order = 0
     
     
     def __len__(self):
@@ -62,7 +63,8 @@ class OrderDispatch:
         order.distance = math.sqrt(x_diff * x_diff + y_diff * y_diff)
 
         score = 4 * order.distance - 5 * order.hunger
-        self.orders.add((-score, order))
+        self.orders.add((-score,self.arrival_order, order))
+        self.arrival_order += 1
         
     
     def deliver_single(self) -> Order:
@@ -77,9 +79,9 @@ class OrderDispatch:
             ...
         """
         if len(self.orders) == 0:
-            raise Exception("No pending orders")
+            raise Exception("No orders pending!")
 
-        _, order = self.orders.extract_max()
+        _,_, order = self.orders.extract_max()
         return order
         
     
@@ -105,7 +107,8 @@ class OrderDispatch:
 
         while len(self.orders) > 0:
             
-            _, next_order = self.orders.extract_max()
+            _,_, next_order = self.orders.extract_max()
+
             to_order = math.sqrt((next_order.location[0] - current_location[0]) ** 2 +(next_order.location[1] - current_location[1]) ** 2)
 
             to_home = math.sqrt((next_order.location[0] - self.dispatch_location[0]) ** 2 +(next_order.location[1] - self.dispatch_location[1]) ** 2)
@@ -138,16 +141,62 @@ if __name__ == "__main__":
 
     # Let's create a dispatch and a few orders
     # Create the dispatch location and system
-    dispatch_location = (0, 0)
-    dispatch = OrderDispatch(dispatch_location, max_orders=5)
-    dispatch.receive_order(Order(4, (10, 10)))  # Far from dispatch
-    dispatch.receive_order(Order(3, (15, 16)))  # Even farther
+    print("=== TASK 3 — Orders & Dispatch Deep Tests ===")
 
-    # Set a very small max_travel (cannot even reach the first and return)
-    max_travel = 5
+    def show(o: Order) -> str:
+        d = "?" if o.distance is None else f"{o.distance:.3f}"
+        return f"Order(h={o.hunger}, loc={o.location}, d={d})"
 
-    delivered = dispatch.deliver_multiple(max_travel)
+    # 1) Zero-distance highest hunger priority
+    ord_disp = OrderDispatch((2, 3), max_orders=10)
+    for o in [Order(3, (5, 6)), Order(4, (6, 4)), Order(1, (4, 4))]:
+        ord_disp.receive_order(o)
+    zero_order = Order(10, (2, 3))
+    ord_disp.receive_order(zero_order)
+    print("\n[1] deliver_single prefers zero-distance highest hunger")
+    print("Actual:", show(ord_disp.deliver_single()))
+    print("Expected: Order(h=10, loc=(2, 3), d=0.000)")
 
-    print(f"Delivered {len(delivered)} order(s) (should be 0):")
-    for order in delivered:
-        print(order)
+    # 2) Tie-breaking (arrival order)
+    tied_disp = OrderDispatch((2, 3), max_orders=10)
+    tieA = Order(2, (3, 3))
+    tieB = Order(2, (3, 3))
+    tied_disp.receive_order(tieA)
+    tied_disp.receive_order(tieB)
+    print("\n[2] Tie behavior by arrival order:")
+    print("Actual #1:", show(tied_disp.deliver_single()))
+    print("Actual #2:", show(tied_disp.deliver_single()))
+    print("Expected: tieA first, then tieB")
+
+    # 3) Capacity limit
+    cap_disp = OrderDispatch((0, 0), max_orders=2)
+    cap_disp.receive_order(Order(1, (1, 0)))
+    cap_disp.receive_order(Order(1, (0, 1)))
+    print("\n[3] Capacity check (3rd insert should raise)")
+    try:
+        cap_disp.receive_order(Order(1, (2, 0)))
+        print("Actual:   no error")
+    except Exception as e:
+        print("Actual:  ", type(e).__name__)
+    print("Expected: Exception")
+
+    # 4) Early rejection in deliver_multiple
+    reject_disp = OrderDispatch((0, 0), max_orders=5)
+    far_order = Order(10, (3, 4))  # distance=5, needs 10 to do round trip
+    reject_disp.receive_order(far_order)
+    result = reject_disp.deliver_multiple(9.0)
+    print("\n[4] deliver_multiple early gate (round trip too far)")
+    print("Actual:", [show(x) for x in result], "len=", len(result))
+    print("Expected: [] len= 0")
+
+    # 5) Multi-order feasible run
+    multi_disp = OrderDispatch((0, 0), max_orders=10)
+    A = Order(8, (1, 0))
+    B = Order(7, (2, 0))
+    C = Order(3, (4, 0))
+    for o in [A, B, C]:
+        multi_disp.receive_order(o)
+    plan = multi_disp.deliver_multiple(5.0)
+    print("\n[5] deliver_multiple feasible plan (A then B)")
+    print("Actual:", [show(x) for x in plan])
+    print("Expected: [Order(h=8, loc=(1, 0), d=1.000), Order(h=7, loc=(2, 0), d=2.000)]")

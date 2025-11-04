@@ -28,18 +28,18 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             
         """
         result = ArrayList() 
-        self.range_query_recursive(self.__root, low, high, result)
+        self.recursive_search(self.__root, low, high, result)
         return result
     
-    def range_query_recursive(self, node: BinaryNode[K,V] | None, low: K, high: K, result: ArrayList[V]) -> None:
+    def recursive_search(self, node: BinaryNode[K,V] | None, low: K, high: K, result: ArrayList[V]) -> None:
         if node is None:
             return
         if node.key > low:
-            self.range_query_recursive(node.left, low, high, result)
+            self.recursive_search(node.left, low, high, result)
         if low <= node.key <= high:
             result.append(node.item)
         if node.key < high:
-            self.range_query_recursive(node.right, low, high, result)
+            self.recursive_search(node.right, low, high, result)
 
     def balance_score(self):
         """
@@ -56,6 +56,7 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             the height. 
             
         """
+        
         def subtree_height(node: BinaryNode[K,V] | None):
             if node is None:
                 return -1
@@ -64,9 +65,13 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
             return 1 + max(left_height, right_height)
         
         tree_height = subtree_height(self.__root)
-        count_nodes = len(self)
+        total_nodes = len(self)
 
-        ideal_height = math.floor(math.log2(count_nodes)) if count_nodes > 0 else 0
+        if total_nodes > 0:
+            ideal_height = math.floor(math.log2(total_nodes))
+        else:
+            ideal_height = 0
+
         return tree_height - ideal_height
     
     
@@ -96,10 +101,10 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
         for i, (key, item) in enumerate(self):  
             inorder_items[i] = (key, item)
 
-        self._BetterBinarySearchTree__root = self.build_balanced(inorder_items, 0, bst_size - 1)
+        self._BetterBinarySearchTree__root = self.build_balanced_bst(inorder_items, 0, bst_size - 1)
 
 
-    def build_balanced(self, nodes: ArrayR, start: int, end: int) -> BinaryNode[K, V] | None:
+    def build_balanced_bst(self, nodes: ArrayR, start: int, end: int) -> BinaryNode[K, V] | None:
         if start > end:
             return None
         
@@ -108,31 +113,22 @@ class BetterBinarySearchTree(BinarySearchTree[K, V]):
         
         root = BinaryNode(item, key)
         
-        root.left = self.build_balanced(nodes, start, mid - 1)
-        root.right = self.build_balanced(nodes, mid + 1, end)
+        root.left = self.build_balanced_bst(nodes, start, mid - 1)
+        root.right = self.build_balanced_bst(nodes, mid + 1, end)
         
         return root
+    
+
             
 
 if __name__ == "__main__":
     # Test your code here.
     
     # Create a Better BST
-    bbst = BetterBinarySearchTree()
-    
-    # Add all integers as key-value pairs to the tree
-    for i in range(10):
-        bbst[i] = i
-        
-    # Try a range query
-    # Should give us the values between 4 and 7
-    print("Range query:", bbst.range_query(4, 7))
-    
-    # Check the balance score before balancing
-    print("Before balancing:", bbst.balance_score())
-    
-    # Try a rebalance
-    bbst.rebalance()
-    
-    # How about after?
-    print("After balancing:", bbst.balance_score())
+    reb_bst = BetterBinarySearchTree()
+    for k in [6, 5, 4, 3, 2, 1]:
+        reb_bst[k] = str(k)
+    pre_rebalance_score = reb_bst.balance_score()
+    reb_bst.rebalance()
+    post_rebalance_score = reb_bst.balance_score()
+    print(f"Rebalance - before: {pre_rebalance_score}, after: {post_rebalance_score} (after should be 0)")
